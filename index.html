@@ -1,0 +1,96 @@
+<title>Debug POST</title>
+<style>
+  body{
+    margin:40px auto;
+    max-width:650px;
+    line-height:1.6;
+    font-size:18px;
+    color:#444;
+    padding:0 10px
+  }
+  h1,h2,h3{
+    line-height:1.2
+  }
+  form > * {
+    display: block;
+  }
+  textarea {
+    width: 400px;
+    max-width: 80%;
+    height: 100px;
+    margin: 40px auto 10px auto;
+  }
+  .submit-wrapper {
+    width: 400px;
+    height: 20px;
+    margin: 10px auto;
+    max-width: 80%;
+    position: relative;
+  }
+  input[type="submit"] {
+    position: absolute;
+    right: 0;
+  }
+</style>
+<div class="arnold">
+  <div>
+      <h2>
+          Open a new tab with the data from a CURL request
+      </h2>
+      <h4>
+        (like you might have gotten from DevTools -> Network -> Right-click -> Copy as CURL)
+      </h4>
+      <h3> Why do this? So that you can use the awesome
+          <a href="http://werkzeug.pocoo.org/docs/0.11/debug/#using-the-debugger">Werkzeug Debugger</a>!
+      </h3>
+      <h4>
+        <a href="./demo.html">See it in action</a>
+      </h4>
+      <form target="_blank" id="to-infinity-and-beyond">
+        <textarea id="curl-text" class="code"></textarea>
+        <div class="submit-wrapper">
+          <input type="submit" value="Open as new tab" />
+        </div>
+      </form>
+  </div>
+</div>
+<script type="text/javascript">
+function queryParamsToAssocArray(paramstring) {
+    var match,
+        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g,
+        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
+    var urlParams = [];
+    while (match = search.exec(paramstring)) {
+       urlParams.push({key: decode(match[1]), value: decode(match[2])});
+    }
+    return urlParams;
+}
+function fillFormFromCurl(evt){
+    var form = document.getElementById('to-infinity-and-beyond'),
+        curlText = document.getElementById('curl-text').value,
+        pieces = curlText.split(' '),
+        url = pieces[1].replace(/^'/, '').replace(/'$/, ''),
+        dataIx = pieces.indexOf('--data'),
+        methodIx = pieces.indexOf('-X'),
+        method = (
+            methodIx > -1 ? pieces[methodIx + 1] :
+            dataIx > -1 ? 'POST' :
+            'GET'),
+        params = dataIx > -1 ?
+            queryParamsToAssocArray(
+                pieces[dataIx + 1].replace(/^'/, '').replace(/'$/, '')
+            ) : [];
+    form.setAttribute('method', method);
+    form.setAttribute('action', url);
+    params.forEach(function(p){
+        var key = p.key, value = p.value;
+        var hiddenField = document.createElement('input');
+        hiddenField.setAttribute('type', 'hidden');
+        hiddenField.setAttribute('name', key);
+        hiddenField.setAttribute('value', value);
+        form.appendChild(hiddenField);
+    });
+}
+document.getElementById('to-infinity-and-beyond').addEventListener('submit', fillFormFromCurl);
+</script>
